@@ -1,0 +1,47 @@
+import cv2
+import numpy as np
+import matplotlib as plt
+import scipy as sc
+from pprint import pprint
+
+
+def face_detect(image='dart5.jpg'):
+    cascade = cv2.CascadeClassifier('frontalface.xml')
+    frame_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    cv2.equalizeHist(frame_gray, frame_gray)
+    faces = cascade.detectMultiScale(frame_gray, 1.1, 10)
+    pprint(len(faces))
+    for (x, y, w, h) in faces:
+        cv2.rectangle(image, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        roi_gray = frame_gray[y:y+h, x:x+w]
+        roi_color = image[y:y+h, x:x+w]
+
+    cv2.imshow('lol', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+def dartboard_detect():
+
+    #   ./opencv_createsamples -img dart.bmp -vec dart.vec -neg negatives.dat -w 20 -h 20 -num 500 -maxidev 80 -maxxangle 0.8 -maxyangle 0.8 -maxzangle 0.2
+
+    #    ./opencv_traincascade -data dartcascade -vec dart.vec -bg negatives.dat -numPos 500 -numNeg 500 -numStages 3 -maxDepth 1 -w 20 -h 20 -minHitRate 0.999 -maxFalseAlarmRate 0.05 -mode ALL
+
+
+def faces():
+    img4_face_positions = np.array([354, 125])
+    img4_face_sizes = np.array([114, 126])
+
+    img5_face_positions = np.array([71, 150], [50, 250], [191, 221], [254, 173], [
+                                   300, 246], [381, 189], [428, 243], [512, 186], [554, 248], [702, 245], [677, 251])
+    img5_face_sizes = np.array([51, 53], [60, 65], [56, 58], [50, 50], [
+                               49, 62], [60, 55], [56, 55], [52, 55], [62, 62], [50, 50], [54, 57])
+
+    img13_face_positions = np.array([])
+    img13_face_sizes = np.array([])
+
+    img14_face_positions = np.array([471, 227], [731, 198])
+    img14_face_sizes = np.array([76, 90], [94, 93])
+
+    img15_face_positions = np.array([])
+    img15_face_sizes = np.array([])
