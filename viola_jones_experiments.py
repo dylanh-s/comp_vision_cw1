@@ -1,132 +1,94 @@
-import cv2
+import cv2 as cv
 import numpy as np
-import matplotlib as plt
 import scipy as sc
+import matplotlib as plt
 from pprint import pprint
-from shapely.geometry import Polygon
 
-THRESHOLD = 0.6
-successful_detections = 0
+def draw(tru, det, image):
+    for i in range(len(tru)):
+        cv.rectangle(image, (tru[i, 0], tru[i, 1]), (tru[i, 2], tru[i, 3]), (0, 255, 0), 2)
+    for i in range(len(det)):
+        cv.rectangle(image, (det[i, 0], det[i, 1]), (det[i, 2], det[i, 3]), (0, 0, 255), 2)
 
-
-def bb_intersection_over_union(boxA, boxB):
-    # determine the (x, y)-coordinates of the intersection rectangle
-    xA = max(boxA[0], boxB[0])
-    yA = max(boxA[1], boxB[1])
-    xB = min(boxA[2], boxB[2])
-    yB = min(boxA[3], boxB[3])
-
-    # compute the area of intersection rectangle
-    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
-
-    # compute the area of both the prediction and ground-truth
-    # rectangles
-    boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
-    boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
-
-    # compute the intersection over union by taking the intersection
-    # area and dividing it by the sum of prediction + ground-truth
-    # areas - the interesection area
-    iou = interArea / float(boxAArea + boxBArea - interArea)
-
-    # return the intersection over union value
-    return iou
-
-
-def face_detect(image, image_no, THRESHOLD=0.55):
-    successful_detections = 0
-    cascade = cv2.CascadeClassifier('frontalface.xml')
-    frame_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    cv2.equalizeHist(frame_gray, frame_gray)
-    faces = cascade.detectMultiScale(frame_gray, 1.1, 10)
-    (no_det_faces, m) = faces.shape[:2]
-    detected_faces = np.ones((no_det_faces, 4))
-    # pprint(len(faces))
-    for (x, y, w, h) in faces:
-        cv2.rectangle(image, (x, y), (x+w, y+h), (0, 0, 255), 2)
-        roi_gray = frame_gray[y:y+h, x:x+w]
-        roi_color = image[y:y+h, x:x+w]
-
-    for i in range(no_det_faces):
-        (x, y, w, h) = faces[i]
-        detected_faces[i][:] = [x, y, w+x, h+y]
-
-    # add ground truth rectangles
-    face_pos, face_size = get_face_positions(image_no)
-    (no_faces, j) = face_pos.shape[:2]
-    true_faces = np.ones((no_faces, 4))
-    for i in range(no_faces):
-        (w, h) = face_size[i][:]
-        #pprint((w, h))
-        (x, y) = face_pos[i][:]
-        #pprint((x, y))
-        true_faces[i][:] = [x, y, w+x, h+y]
-        pprint(true_faces)
-        cv2.rectangle(image, (x, y),
-                      (x+w, y+h), (0, 255/(i+1), 0), 2)
-    cv2.imshow('lol', image)
-
-    for t_f in true_faces:
+def evaluate(tru, det, threshold):
+    successes = 0
+    for t in tru:
         iou_max = 0
-        for d_f in detected_faces:
-            iou_score = bb_intersection_over_union(d_f, t_f)
-            if (iou_score >= iou_max):
-                iou_max = iou_score
-        if (iou_max > THRESHOLD):
-            successful_detections += 1
-        pprint(iou_max)
-    false_detections = 0
-    # for d_f in detected_faces:
-    #     iou_max = 0
-    #     for t_f in true_faces:
-    #         iou_score = bb_intersection_over_union(d_f, t_f)
-    #         if (iou_score >= iou_max):
-    #             iou_max = iou_score
-    #     if (iou_max < THRESHOLD):
-    #         false_detections += 1
+        for d in det:
+            iou_score = intersection_over_union(t, d)
+            if (iou_score >= iou_max): iou_max = iou_score
+        if (iou_max > threshold): successes += 1
 
-    TPR = successful_detections/no_faces
-    #FNR = false_detections/no_det_faces
-    PPV = successful_detections / no_det_faces
-    F1 = 2*((TPR*PPV)/(TPR+PPV))
-    pprint("TPR = " + str(TPR))
-    pprint("PPV = " + str(PPV))
-    pprint("F1 = " + str(F1))
-    # successful_detectionss
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    TPR = successes/len(tru)
+    PPV = successes/len(det)
+    if (TPR == 0 or PPV == 0): F1 = 0.0
+    else: F1 = 2*((TPR*PPV)/(TPR+PPV))
+    print("TPR = " + str(TPR))
+    print("PPV = " + str(PPV))
+    print("F1  = " + str(F1))
 
+def intersection_over_union(tru, det):
+    x1 = max(tru[0], det[0])
+    y1 = max(tru[1], det[1])
+    x2 = min(tru[2], det[2])
+    y2 = min(tru[3], det[3])
 
-def get_face_positions(image_number=4):
-    img4_face_positions = np.array([[354, 125]])
-    img4_face_sizes = np.array([[114, 126]])
+    intersection_area = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
+    tru_area = (tru[2] - tru[0] + 1) * (tru[3] - tru[1] + 1)
+    det_area = (det[2] - det[0] + 1) * (det[3] - det[1] + 1)
+    union_area = tru_area + det_area - intersection_area
+    return intersection_area/union_area
 
-    img5_face_positions = np.array([[71, 150], [50, 250], [191, 221], [254, 173], [
-        300, 246], [381, 189], [428, 243], [512, 186], [554, 248], [645, 179], [677, 251]])
-    img5_face_sizes = np.array([[51, 53], [60, 65], [56, 58], [50, 50], [49, 62], [
-        60, 55], [56, 55], [52, 55], [62, 62], [50, 65], [54, 60]])
+def face_detect(image_name, threshold):
+    image = cv.imread(image_name)
+    image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
+    image_grey = cv.equalizeHist(image_grey)
+    image_number = int(image_name[4:-4])
+    det_faces = cv.CascadeClassifier("frontalface.xml").detectMultiScale(image_grey, 1.1, 10)
+    det_faces = np.array([[x, y, w+x, h+y] for (x, y, w, h) in det_faces])
+    tru_faces = get_faces(image_number)
+    tru_faces = np.array([[x, y, w+x, h+y] for (x, y, w, h) in tru_faces])
+    
+    draw(tru_faces, det_faces, image)
+    evaluate(tru_faces, det_faces, threshold)
+    cv.imshow("Faces", image)
+    cv.waitKey(0)
 
-    img13_face_positions = np.array([[425, 120]])
-    img13_face_sizes = np.array([[97, 135]])
+def get_faces(image_number):
+    img4_faces = np.array([[354, 125, 114, 126]])
+    img5_faces = np.array([[71, 150, 51, 53], [50, 250, 60, 65], [191, 221, 56, 58], [254, 173, 50, 50], [300, 246, 49, 62], [381, 189, 60, 55], [428, 243, 56, 55], [512, 186, 52, 55], [554, 248, 62, 62], [645, 179, 50, 65], [677, 251, 54, 60]])
+    img13_faces = np.array([[425, 120, 97, 135]])
+    img14_faces = np.array([[471, 227, 76, 90], [731, 198, 94, 93]])
+    img15_faces = np.array([[56, 137, 70, 78], [365, 107, 86, 93], [534, 129, 84, 86]])
 
-    img14_face_positions = np.array([[471, 227], [731, 198]])
-    img14_face_sizes = np.array([[76, 90], [94, 93]])
+    if (image_number == 4): return img4_faces
+    if (image_number == 5): return img5_faces
+    if (image_number == 13): return img13_faces
+    if (image_number == 14): return img14_faces
+    if (image_number == 15): return img15_faces
 
-    img15_face_positions = np.array([[56, 137], [365, 107], [534, 129]])
-    img15_face_sizes = np.array([[70, 78], [86, 93], [84, 86]])
+def dart_detect(image_name, threshold):
+    image = cv.imread(image_name)
+    image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
+    image_grey = cv.equalizeHist(image_grey)
+    image_number = int(image_name[4:-4])
+    det_darts = cv.CascadeClassifier("dartboard.xml").detectMultiScale(image_grey, 1.1, 10)
+    det_darts = np.array([[x, y, w+x, h+y] for (x, y, w, h) in det_darts])
+    tru_darts = get_darts(image_number)
+    tru_darts = np.array([[x, y, w+x, h+y] for (x, y, w, h) in tru_darts])
 
-    if (image_number == 4):
-        return img4_face_positions, img4_face_sizes
-    if (image_number == 5):
-        return img5_face_positions, img5_face_sizes
-    if (image_number == 13):
-        return img13_face_positions, img13_face_sizes
-    if (image_number == 14):
-        return img14_face_positions, img14_face_sizes
-    if (image_number == 15):
-        return img15_face_positions, img15_face_sizes
+    draw(tru_darts, det_darts, image)
+    evaluate(tru_darts, det_darts, threshold)
+    cv.imshow("Darts", image)
+    cv.waitKey(0)
 
+def get_darts(image_number):
+    img4_darts = np.array([[155, 64, 263, 263]])
+    img5_darts = np.array([[416, 125, 129, 139]])
 
-image_no = 5
-image = cv2.imread("dart5.jpg")
-face_detect(image, image_no)
+    if (image_number == 4): return img4_darts
+    if (image_number == 5): return img5_darts
+
+image_name = "dart5.jpg"
+face_detect(image_name, 0.6)
+dart_detect(image_name, 0.6)
