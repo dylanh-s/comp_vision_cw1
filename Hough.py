@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 import scipy as sc
 import matplotlib as plt
+from pprint import pprint
 
 def threshold(a, t):
     a[a > t] = 255
@@ -27,32 +28,32 @@ def sobel(image):
     magnitude_image, direction_image = cv.cartToPolar(x_deriv_image, y_deriv_image)
     return magnitude_image, direction_image
 
-def hough(magnitude_image, direction_image, rmin, rmax, ts, th):
-    height, width = magnitude_image.shape[:2]
-    if rmax == 0: 
-        rmax = np.min(np.array([height, width]))//2
-    hough_space = np.zeros((rmax, height, width))
-    for r in range(rmin, rmax): 
-        for y in range(height):
-            for x in range(width):
-                if magnitude_image[y, x] > ts:
+def hough(image_name, rmin, rmax, t1, t2):
+    image = cv.imread(image_name)
+    image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
+    magnitude_image, direction_image = sobel(image_grey)
+    height, width = image.shape[:2]
+    rmin = int(np.floor((rmin/100)*(np.min(np.array([height, width]))//2)))
+    rmax = int(np.floor((rmax/100)*(np.min(np.array([height, width]))//2)))
+
+    space = np.zeros((rmax, height, width))
+    for y in range(height):
+        for x in range(width):
+            for r in range(rmin, rmax): 
+                if magnitude_image[y, x] > t1:
                     yp = y+(r*np.sin(direction_image[y, x]))
                     xp = x+(r*np.cos(direction_image[y, x]))
                     yn = y-(r*np.sin(direction_image[y, x]))
                     xn = x-(r*np.cos(direction_image[y, x]))
                     
                     if (yp > 0 and yp < height and xp > 0 and xp < width):
-                        hough_space[r, int(yp), int(xp)] += 1
+                        space[r, int(yp), int(xp)] += 1
                     if (yn > 0 and yn < height and xn > 0 and xn < width):
-                        hough_space[r, int(yn), int(xn)] += 1
-    hough_space = threshold(hough_space, th)
-    return hough_space
+                        space[r, int(yn), int(xn)] += 1
+    space = threshold(space, t2)
+    image = np.sum(space, axis=0)
+    image = threshold(image, 1)
+    cv.imwrite("hough"+image_name, image)
 
-image = cv.imread("coins1.png")
-image = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
-magnitude_image, direction_image = sobel(image)
-hough_space = hough(magnitude_image, direction_image, 30, 60, 200, 8)
-hough_image = np.sum(hough_space, axis=0)
-hough_image = cv.normalize(hough_image, hough_image, 0, 1, cv.NORM_MINMAX)
-cv.imshow("Hough", hough_image)
-cv.waitKey(0)
+hough_space = hough("coins1.png", 15, 35, 200, 10)
+

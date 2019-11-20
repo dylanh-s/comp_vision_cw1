@@ -2,13 +2,23 @@ import cv2 as cv
 import numpy as np
 import scipy as sc
 import matplotlib as plt
+from pprint import pprint
 
-def draw(tru, det, image):
-    for i in range(len(tru)):
-        cv.rectangle(image, (tru[i, 0], tru[i, 1]), (tru[i, 2], tru[i, 3]), (0, 255, 0), 2)
+def draw(image, boxes, colour, width):
+    for i in range(len(boxes)):
+        cv.rectangle(image, (boxes[i, 0], boxes[i, 1]), (boxes[i, 2], boxes[i, 3]), colour, width)
 
-    for i in range(len(det)):
-        cv.rectangle(image, (det[i, 0], det[i, 1]), (det[i, 2], det[i, 3]), (0, 0, 255), 2)
+def intersection_over_union(tru, det):
+    x1 = max(tru[0], det[0])
+    y1 = max(tru[1], det[1])
+    x2 = min(tru[2], det[2])
+    y2 = min(tru[3], det[3])
+
+    intersection_area = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
+    tru_area = (tru[2] - tru[0] + 1) * (tru[3] - tru[1] + 1)
+    det_area = (det[2] - det[0] + 1) * (det[3] - det[1] + 1)
+    union_area = tru_area + det_area - intersection_area
+    return intersection_area/union_area
 
 def evaluate(tru, det, threshold):
     successes = 0
@@ -32,36 +42,6 @@ def evaluate(tru, det, threshold):
     print("PPV = " + str(PPV))
     print("F1  = " + str(F1))
 
-def intersection_over_union(tru, det):
-    x1 = max(tru[0], det[0])
-    y1 = max(tru[1], det[1])
-    x2 = min(tru[2], det[2])
-    y2 = min(tru[3], det[3])
-
-    intersection_area = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
-    tru_area = (tru[2] - tru[0] + 1) * (tru[3] - tru[1] + 1)
-    det_area = (det[2] - det[0] + 1) * (det[3] - det[1] + 1)
-    union_area = tru_area + det_area - intersection_area
-    return intersection_area/union_area
-
-def viola_jones(image_name, image_type, threshold):
-    image = cv.imread(image_name)
-    image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
-    image_grey = cv.equalizeHist(image_grey)
-    image_number = int(image_name[4:-4])
-
-    det_faces = cv.CascadeClassifier(image_type+".xml").detectMultiScale(image_grey, 1.1, 10)
-    det_faces = np.array([[x, y, w+x, h+y] for (x, y, w, h) in det_faces])
-
-    tru_faces = get_objects(image_type, image_number)
-    tru_faces = np.array([[x, y, w+x, h+y] for (x, y, w, h) in tru_faces])
-
-    draw(tru_faces, det_faces, image)
-    evaluate(tru_faces, det_faces, threshold)
-    cv.imwrite("output"+image_type+str(image_number)+".jpg", image)
-    # cv.imshow(image_type, image)
-    # cv.waitKey(0)
-
 def get_objects(image_type, image_number):
     img4_faces = np.array([[354, 125, 114, 126]])
     img5_faces = np.array([[71, 150, 51, 53], [50, 250, 60, 65], [191, 221, 56, 58], [254, 173, 50, 50], [300, 246, 49, 62], [381, 189, 60, 55], [428, 243, 56, 55], [512, 186, 52, 55], [554, 248, 62, 62], [645, 179, 50, 65], [677, 251, 54, 60]])
@@ -82,22 +62,27 @@ def get_objects(image_type, image_number):
         if (image_number == 4): return img4_darts
         if (image_number == 5): return img5_darts
 
-image_name = "dart4.jpg"
-viola_jones(image_name, "faces", 0.6)
-#viola_jones(image_name, "darts", 0.6)
+def viola_jones(image_name, image_type, threshold):
+    image = cv.imread(image_name)
+    image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
+    image_grey = cv.equalizeHist(image_grey)
+    image_number = int(image_name[5:-4])
 
-image_name = "dart5.jpg"
-viola_jones(image_name, "faces", 0.6)
-#viola_jones(image_name, "darts", 0.6)
+    det = cv.CascadeClassifier(image_type+".xml").detectMultiScale(image_grey, 1.1, 3)
+    det = np.array([[x, y, w+x, h+y] for (x, y, w, h) in det])
+    tru = get_objects(image_type, image_number)
+    tru = np.array([[x, y, w+x, h+y] for (x, y, w, h) in tru])
+    evaluate(tru, det, threshold)
 
-image_name = "dart13.jpg"
-viola_jones(image_name, "faces", 0.6)
-#viola_jones(image_name, "darts", 0.6)
+    draw(image, det, (0, 255, 0), 2)
+    draw(image, tru, (0, 0, 255), 2)
+    cv.imwrite("viola_jones"+image_type+str(image_number)+".jpg", image)
 
-image_name = "dart14.jpg"
-viola_jones(image_name, "faces", 0.6)
-#viola_jones(image_name, "darts", 0.6)
+viola_jones("darts4.jpg", "faces", 0.6)
+viola_jones("darts5.jpg", "faces", 0.6)
+viola_jones("darts13.jpg", "faces", 0.6)
+viola_jones("darts14.jpg", "faces", 0.6)
+viola_jones("darts15.jpg", "faces", 0.6)
 
-image_name = "dart15.jpg"
-viola_jones(image_name, "faces", 0.6)
-#viola_jones(image_name, "darts", 0.6)
+viola_jones("darts4.jpg", "darts", 0.6)
+viola_jones("darts5.jpg", "darts", 0.6)
