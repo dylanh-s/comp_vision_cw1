@@ -28,18 +28,20 @@ def sobel(image):
     magnitude_image, direction_image = cv.cartToPolar(x_deriv_image, y_deriv_image)
     return magnitude_image, direction_image
 
-def hough(image_name, rmin, rmax, t1, t2):
+def hough(image_name, rmin, rmax, rinc, t1, t2):
     image = cv.imread(image_name)
     image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
-    magnitude_image, direction_image = sobel(image_grey)
+    image_number = int(image_name[5:-4])
     height, width = image.shape[:2]
+    
     rmin = int(np.floor((rmin/100)*(np.min(np.array([height, width]))//2)))
     rmax = int(np.floor((rmax/100)*(np.min(np.array([height, width]))//2)))
 
+    magnitude_image, direction_image = sobel(image_grey)
     space = np.zeros((rmax, height, width))
     for y in range(height):
         for x in range(width):
-            for r in range(rmin, rmax): 
+            for r in range(rmin, rmax, rinc): 
                 if magnitude_image[y, x] > t1:
                     yp = y+(r*np.sin(direction_image[y, x]))
                     xp = x+(r*np.cos(direction_image[y, x]))
@@ -53,7 +55,25 @@ def hough(image_name, rmin, rmax, t1, t2):
     space = threshold(space, t2)
     image = np.sum(space, axis=0)
     image = threshold(image, 1)
-    cv.imwrite("hough"+image_name, image)
+    cv.imwrite("hough_output"+str(image_number)+".jpg", image)
 
-hough_space = hough("coins1.png", 15, 35, 200, 10)
-
+image_name = input("Please enter image name: ")
+hough(image_name, 15, 35, 1, 200, 10) 
+'''
+hough("input0.jpg", 15, 35, 1, 200, 10)
+hough("input1.jpg", 15, 35, 1, 200, 10)
+hough("input2.jpg", 15, 35, 1, 200, 10)
+hough("input3.jpg", 15, 35, 1, 200, 10)
+hough("input4.jpg", 15, 35, 1, 200, 10)
+hough("input5.jpg", 15, 35, 1, 200, 10)
+hough("input6.jpg", 15, 35, 1, 200, 10)
+hough("input7.jpg", 15, 35, 1, 200, 10)
+hough("input8.jpg", 15, 35, 1, 200, 10)
+hough("input9.jpg", 15, 35, 1, 200, 10)
+hough("input10.jpg", 15, 35, 1, 200, 10)
+hough("input11.jpg", 15, 35, 1, 200, 10)
+hough("input12.jpg", 15, 35, 1, 200, 10)
+hough("input13.jpg", 15, 35, 1, 200, 10)
+hough("input14.jpg", 15, 35, 1, 200, 10)
+hough("input15.jpg", 15, 35, 1, 200, 10)
+'''

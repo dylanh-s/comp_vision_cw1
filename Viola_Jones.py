@@ -43,24 +43,52 @@ def evaluate(tru, det, threshold):
     print("F1  = " + str(F1))
 
 def get_objects(image_type, image_number):
-    img4_faces = np.array([[354, 125, 114, 126]])
-    img5_faces = np.array([[71, 150, 51, 53], [50, 250, 60, 65], [191, 221, 56, 58], [254, 173, 50, 50], [300, 246, 49, 62], [381, 189, 60, 55], [428, 243, 56, 55], [512, 186, 52, 55], [554, 248, 62, 62], [645, 179, 50, 65], [677, 251, 54, 60]])
-    img13_faces = np.array([[425, 120, 97, 135]])
-    img14_faces = np.array([[471, 227, 76, 90], [731, 198, 94, 93]])
-    img15_faces = np.array([[56, 137, 70, 78], [365, 107, 86, 93], [534, 129, 84, 86]])
+    img0_darts = np.array([[442, 16, 153, 175]])
+    img1_darts = np.array([[198, 132, 192, 191]])
+    img2_darts = np.array([[104, 98, 85, 86]])
+    img3_darts = np.array([[326, 150, 62, 68]])
+    img4_darts = np.array([[186, 96, 205, 205]])
+    img5_darts = np.array([[434, 142, 103, 107]])
+    img6_darts = np.array([[213, 118, 59, 60]])
+    img7_darts = np.array([[257, 172, 142, 142]])
+    img8_darts = np.array([[68, 253, 57, 86], [845, 219, 112, 117]])
+    img9_darts = np.array([[205, 47, 229, 231]])
+    img10_darts = np.array([[93, 106, 92, 106], [586, 129, 53, 82], [917, 150, 33, 63]])
+    img11_darts = np.array([[177, 106, 54, 79]])
+    img12_darts = np.array([[158, 79, 56, 133]])
+    img13_darts = np.array([[275, 122, 127, 127]])
+    img14_darts = np.array([[123, 103, 121, 121], [989, 98, 120, 120]])
+    img15_darts = np.array([[155, 57, 128, 137]])
 
-    img4_darts = np.array([[155, 64, 263, 263]])
-    img5_darts = np.array([[416, 125, 129, 139]])
+    img4_faces = np.array([[331, 103, 157, 165]])
+    img5_faces = np.array([[59, 139, 65, 64], [51, 250, 65, 69], [192, 212, 57, 72], [242, 167, 66, 66], [289, 238, 56, 74], [375, 192, 68, 58], [426, 232, 58, 71], [514, 176, 65, 66], [555, 240, 69, 76], [646, 186, 63, 64], [681, 244, 52, 68]])
+    img13_faces = np.array([[420, 131, 118, 128]])
+    img14_faces = np.array([[456, 215, 99, 108], [727, 190, 104, 105]])
+    img15_faces = np.array([[77, 133, 46, 80], [375, 114, 39, 74], [541, 136, 52, 76]])
 
+    if (image_type == "darts"):
+        if (image_number == 0): return img0_darts
+        if (image_number == 1): return img1_darts
+        if (image_number == 2): return img2_darts
+        if (image_number == 3): return img3_darts
+        if (image_number == 4): return img4_darts
+        if (image_number == 5): return img5_darts
+        if (image_number == 6): return img6_darts
+        if (image_number == 7): return img7_darts
+        if (image_number == 8): return img8_darts
+        if (image_number == 9): return img9_darts
+        if (image_number == 10): return img10_darts
+        if (image_number == 11): return img11_darts
+        if (image_number == 12): return img12_darts
+        if (image_number == 13): return img13_darts
+        if (image_number == 14): return img14_darts
+        if (image_number == 15): return img15_darts
     if (image_type == "faces"):
         if (image_number == 4): return img4_faces
         if (image_number == 5): return img5_faces
         if (image_number == 13): return img13_faces
         if (image_number == 14): return img14_faces
         if (image_number == 15): return img15_faces
-    if (image_type == "darts"):
-        if (image_number == 4): return img4_darts
-        if (image_number == 5): return img5_darts
 
 def viola_jones(image_name, image_type, threshold):
     image = cv.imread(image_name)
@@ -76,13 +104,32 @@ def viola_jones(image_name, image_type, threshold):
 
     draw(image, det, (0, 255, 0), 2)
     draw(image, tru, (0, 0, 255), 2)
-    cv.imwrite("viola_jones"+image_type+str(image_number)+".jpg", image)
+    cv.imwrite("viola_jones_"+image_type+"_output"+str(image_number)+".jpg", image)
 
-viola_jones("darts4.jpg", "faces", 0.6)
-viola_jones("darts5.jpg", "faces", 0.6)
-viola_jones("darts13.jpg", "faces", 0.6)
-viola_jones("darts14.jpg", "faces", 0.6)
-viola_jones("darts15.jpg", "faces", 0.6)
+image_name = input("Please enter image name: ")
+image_type = input("Please enter image type: ")
+viola_jones(image_name, image_type, 0.6)
+'''
+viola_jones("input0.jpg", "darts", 0.6)
+viola_jones("input1.jpg", "darts", 0.6)
+viola_jones("input2.jpg", "darts", 0.6)
+viola_jones("input3.jpg", "darts", 0.6)
+viola_jones("input4.jpg", "darts", 0.6)
+viola_jones("input5.jpg", "darts", 0.6)
+viola_jones("input6.jpg", "darts", 0.6)
+viola_jones("input7.jpg", "darts", 0.6)
+viola_jones("input8.jpg", "darts", 0.6)
+viola_jones("input9.jpg", "darts", 0.6)
+viola_jones("input10.jpg", "darts", 0.6)
+viola_jones("input11.jpg", "darts", 0.6)
+viola_jones("input12.jpg", "darts", 0.6)
+viola_jones("input13.jpg", "darts", 0.6)
+viola_jones("input14.jpg", "darts", 0.6)
+viola_jones("input15.jpg", "darts", 0.6)
 
-viola_jones("darts4.jpg", "darts", 0.6)
-viola_jones("darts5.jpg", "darts", 0.6)
+viola_jones("input4.jpg", "faces", 0.6)
+viola_jones("input5.jpg", "faces", 0.6)
+viola_jones("input13.jpg", "faces", 0.6)
+viola_jones("input14.jpg", "faces", 0.6)
+viola_jones("input15.jpg", "faces", 0.6)
+'''
