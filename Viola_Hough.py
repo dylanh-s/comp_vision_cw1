@@ -31,42 +31,74 @@ def sobel(image):
     direction_image[direction_image < -np.pi/2] += np.pi
     return magnitude_image, direction_image
 
-def hough(image_name, rmin, rmax, rinc, t1, t2):
+def hough(image_name, image_type, rmin, rmax, rinc, ainc, t1, t2, t3):
     image = cv.imread(image_name)
     image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
     image_number = int(image_name[5:-4])
     height, width = image.shape[:2]
-
+    
     rmin = int(np.floor((rmin/100)*(np.min(np.array([height, width]))//2)))
     rmax = int(np.floor((rmax/100)*(np.min(np.array([height, width]))//2)))
+    lmax = int(np.floor((np.sqrt(np.square(height//2)+np.square(width//2)))))
 
+    circle_space = np.zeros((rmax, height, width))
+    circle_image = np.zeros((height, width))
+    line_space = np.zeros((lmax, 360))
+    line_image = np.zeros((height, width))
+    
     magnitude_image, direction_image = sobel(image_grey)
-    space = np.zeros((rmax, height, width))
     for y in range(height):
         for x in range(width):
-            for r in range(rmin, rmax, rinc): 
-                if magnitude_image[y, x] > t1:
-                    yp = y+(r*np.sin(direction_image[y, x]))
-                    xp = x+(r*np.cos(direction_image[y, x]))
-                    yn = y-(r*np.sin(direction_image[y, x]))
-                    xn = x-(r*np.cos(direction_image[y, x]))
-                    
-                    if (yp > 0 and yp < height and xp > 0 and xp < width):
-                        space[r, int(yp), int(xp)] += 1
-                    if (yn > 0 and yn < height and xn > 0 and xn < width):
-                        space[r, int(yn), int(xn)] += 1
-    space = threshold(space, t2)
-    image = np.sum(space, axis=0)
-    image = threshold(image, 1)
-    det = []
+            if (image_type == "circles"):
+                for r in range(rmin, rmax, rinc): 
+                    if magnitude_image[y, x] > t1:
+                        yp = y+(r*np.sin(direction_image[y, x]))
+                        xp = x+(r*np.cos(direction_image[y, x]))
+                        yn = y-(r*np.sin(direction_image[y, x]))
+                        xn = x-(r*np.cos(direction_image[y, x]))
+                        
+                        if (yp > 0 and yp < height and xp > 0 and xp < width):
+                            circle_space[r, int(yp), int(xp)] += 1
+                        if (yn > 0 and yn < height and xn > 0 and xn < width):
+                            circle_space[r, int(yn), int(xn)] += 1
+            elif (image_type == "lines"):
+                amin = int(np.clip(np.floor(np.degrees(direction_image[y, x])-6), 0, 360))
+                amax = int(np.clip(np.floor(np.degrees(direction_image[y, x])+6+1), 0, 360))
+                if ((amin > 10 and amax < 80) or (amin > 100 and amax < 170) or (amin > 190 and amax < 260) or (amin > 280 and amax < 350)):
+                    for a in range(amin, amax, ainc): 
+                        if magnitude_image[y, x] > t1:
+                            d = int(np.floor((x-width//2)*np.cos(np.radians(a))+(y-height//2)*np.sin(np.radians(a))))
+                            line_space[d, a] += 1
+
+    circle_space = threshold(circle_space, t2)
+    circle_image = np.sum(circle_space, axis=0)
+    circle_image = threshold(circle_image, 1)
+
+    line_space = threshold(line_space, t3)
+    dn, an = np.nonzero(line_space)
+    for a1 in range(len(an)-1):
+        for a2 in range(a1+1, len(an)):
+            for d1 in range(len(dn)-1):
+                for d2 in range(d1+1, len(dn)):
+                    if (line_space[dn[d1], an[a1]] == 255 and line_space[dn[d2], an[a2]] == 255 and abs(an[a1] - an[a2]) > 5):
+                        a = np.array([[np.cos(np.radians(an[a1])), np.sin(np.radians(an[a1]))], [np.cos(np.radians(an[a2])), np.sin(np.radians(an[a2]))]])
+                        d = np.array([[dn[d1]], [dn[d2]]])
+                        if (np.linalg.det(a) != 0):
+                            x, y = np.linalg.solve(a, d)
+                            x, y = int(np.floor(x+width//2)), int(np.floor(y+height//2))
+                            if (y > 0 and y < height and x > 0 and x < width):
+                                line_image[y, x] = 255
+    det_circles = []
+    det_lines = []
     for y in range(height):
         for x in range(width):
-            if (image[y, x] == 255):
-                det.append([y, x])
-    det = np.asarray(det)
-    #cv.imshow("Hough", image)
-    #cv.waitKey(0)
-    return det
+            if (circle_image[y, x] == 255):
+                det_circles.append([y, x])
+            if (line_image[y, x] == 255):
+                det_lines.append([y, x])
+    det_circles = np.asarray(det_circles)
+    det_lines = np.asarray(det_lines)
+    return det_circles, det_lines
 
 def draw(image, boxes, colour, width):
     for i in range(len(boxes)):
@@ -141,31 +173,29 @@ def get_objects(image_number):
     if (image_number == 14): return img14_darts
     if (image_number == 15): return img15_darts
 
-def viola_jones(image_name, t3):
+def viola_jones(image_name, nmin, t4):
     image = cv.imread(image_name)
     image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
     image_grey = cv.equalizeHist(image_grey)
     image_number = int(image_name[5:-4])
 
-    det = cv.CascadeClassifier("darts.xml").detectMultiScale(image_grey, 1.1, 3)
+    det = cv.CascadeClassifier("darts.xml").detectMultiScale(image_grey, 1.1, nmin)
     det = np.array([[x, y, w+x, h+y] for (x, y, w, h) in det])
     tru = get_objects(image_number)
     tru = np.array([[x, y, w+x, h+y] for (x, y, w, h) in tru])
-    evaluate(tru, det, t3)
+    evaluate(tru, det, t4)
 
     draw(image, det, (0, 0, 255), 2)
     draw(image, tru, (0, 255, 0), 2)
-    #cv.imshow("Viola", image)
-    #cv.waitKey(0)
     return det, tru
 
-def viola_hough(image_name, rmin, rmax, rinc, t1, t2, t3, t4): 
-    #t1 & t2 are hough thresholds, t3 is viola_jones threshold, t4 is viola_hough threshold
+def viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, t1, t2, t3, t4, t5): 
+    #t1, t2, t3 are hough thresholds, t4 is viola_jones threshold, t5 is viola_hough threshold
     image = cv.imread(image_name)
     image_number = int(image_name[5:-4])
     height, width = image.shape[:2]
-    det_circles = hough(image_name, rmin, rmax, rinc, t1, t2)
-    det_objects, tru_objects = viola_jones(image_name, t3)
+    det_circles, det_lines = hough(image_name, rmin, rmax, rinc, ainc, t1, t2, t3)
+    det_objects, tru_objects = viola_jones(image_name, nmin, t4)
     
     det_combo = []
     for (x1, y1, x2, y2) in det_objects:
@@ -173,14 +203,13 @@ def viola_hough(image_name, rmin, rmax, rinc, t1, t2, t3, t4):
         for (y, x) in det_circles:
             if (y >= y1 and y <= y2 and x >= x1 and x <= x2):
                 votes += 1
-        print(votes)
-        if (votes > t4):
+        for (y, x) in det_lines:
+            if (y >= y1 and y <= y2 and x >= x1 and x <= x2):
+                votes += 1
+        if (votes > t5):
             det_combo.append([x1, y1, x2, y2])
     det_combo = np.asarray(det_combo)
     
-    pprint(det_circles)
-    pprint(det_objects)
-    pprint(det_combo)
     draw(image, det_combo, (0, 255,  0), 2)
     draw(image, tru_objects, (0, 0, 255), 2)
     cv.imwrite("viola_hough_output"+str(image_number)+".jpg", image)
@@ -188,4 +217,4 @@ def viola_hough(image_name, rmin, rmax, rinc, t1, t2, t3, t4):
     cv.waitKey(0)
 
 image_name = input("Please enter image name: ")
-viola_hough(image_name, 15, 35, 1, 200, 10, 0.6, 40)
+viola_hough(image_name, 15, 35, 1, 2, 3, 200, 10, 20, 0.5, 40)

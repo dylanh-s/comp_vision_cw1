@@ -64,7 +64,7 @@ def get_objects(image_type, image_number):
     img5_faces = np.array([[59, 139, 65, 64], [51, 250, 65, 69], [192, 212, 57, 72], [242, 167, 66, 66], [289, 238, 56, 74], [375, 192, 68, 58], [426, 232, 58, 71], [514, 176, 65, 66], [555, 240, 69, 76], [646, 186, 63, 64], [681, 244, 52, 68]])
     img13_faces = np.array([[420, 131, 118, 128]])
     img14_faces = np.array([[456, 215, 99, 108], [727, 190, 104, 105]])
-    img15_faces = np.array([[77, 133, 46, 80], [375, 114, 39, 74], [541, 136, 52, 76]])
+    img15_faces = np.array([[67, 133, 56, 80], [541, 136, 52, 76]])
 
     if (image_type == "darts"):
         if (image_number == 0): return img0_darts
@@ -90,13 +90,13 @@ def get_objects(image_type, image_number):
         if (image_number == 14): return img14_faces
         if (image_number == 15): return img15_faces
 
-def viola_jones(image_name, image_type, threshold):
+def viola_jones(image_name, image_type, nmin, threshold):
     image = cv.imread(image_name)
     image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
     image_grey = cv.equalizeHist(image_grey)
     image_number = int(image_name[5:-4])
 
-    det = cv.CascadeClassifier(image_type+".xml").detectMultiScale(image_grey, 1.1, 3)
+    det = cv.CascadeClassifier(image_type+".xml").detectMultiScale(image_grey, 1.1, nmin)
     det = np.array([[x, y, w+x, h+y] for (x, y, w, h) in det])
     tru = get_objects(image_type, image_number)
     tru = np.array([[x, y, w+x, h+y] for (x, y, w, h) in tru])
@@ -108,28 +108,14 @@ def viola_jones(image_name, image_type, threshold):
 
 image_name = input("Please enter image name: ")
 image_type = input("Please enter image type: ")
-viola_jones(image_name, image_type, 0.6)
+viola_jones(image_name, image_type, 3, 0.5)
 '''
-viola_jones("input0.jpg", "darts", 0.6)
-viola_jones("input1.jpg", "darts", 0.6)
-viola_jones("input2.jpg", "darts", 0.6)
-viola_jones("input3.jpg", "darts", 0.6)
-viola_jones("input4.jpg", "darts", 0.6)
-viola_jones("input5.jpg", "darts", 0.6)
-viola_jones("input6.jpg", "darts", 0.6)
-viola_jones("input7.jpg", "darts", 0.6)
-viola_jones("input8.jpg", "darts", 0.6)
-viola_jones("input9.jpg", "darts", 0.6)
-viola_jones("input10.jpg", "darts", 0.6)
-viola_jones("input11.jpg", "darts", 0.6)
-viola_jones("input12.jpg", "darts", 0.6)
-viola_jones("input13.jpg", "darts", 0.6)
-viola_jones("input14.jpg", "darts", 0.6)
-viola_jones("input15.jpg", "darts", 0.6)
+for n in range(16):
+    image_name = "input"+str(n)+".jpg"
+    viola_jones(image_name, "darts", 3, 0.5)
 
-viola_jones("input4.jpg", "faces", 0.6)
-viola_jones("input5.jpg", "faces", 0.6)
-viola_jones("input13.jpg", "faces", 0.6)
-viola_jones("input14.jpg", "faces", 0.6)
-viola_jones("input15.jpg", "faces", 0.6)
+i = np.array([4, 5, 13, 14, 15])
+for n in i:
+    image_name = "input"+str(n)+".jpg"
+    viola_jones(image_name, "faces", 3, 0.5)
 '''
