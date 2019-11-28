@@ -5,9 +5,10 @@ import matplotlib as plt
 from pprint import pprint
 
 def threshold(a, t):
-    a[a > t] = 255
-    a[a <= t] = 0
-    return a
+    b = np.copy(a)
+    b[b > t] = 255
+    b[b <= t] = 0
+    return b
 
 def convolve(image,	kernel):
     (iH, iW) = image.shape[:2]
@@ -71,7 +72,11 @@ def hough(image_name, image_type, rmin, rmax, rinc, ainc, t1, t2, t3):
     circle_image = np.sum(circle_space, axis=0)
     circle_image = threshold(circle_image, 1)
 
-    line_space = threshold(line_space, t3)
+    line_space_prime = threshold(line_space, t3)
+    while (np.size(np.nonzero(line_space_prime)) > 250):
+        t3 += 1
+        line_space_prime = threshold(line_space, t3)
+    line_space = line_space_prime
     dn, an = np.nonzero(line_space)
     for a1 in range(len(an)-1):
         for a2 in range(a1+1, len(an)):
@@ -90,18 +95,13 @@ def hough(image_name, image_type, rmin, rmax, rinc, ainc, t1, t2, t3):
         cv.imwrite("hough_"+str(image_type)+"_output"+str(image_number)+".jpg", circle_image)
     elif (image_type == "lines"):
         cv.imwrite("hough_"+str(image_type)+"_output"+str(image_number)+".jpg", line_image)
-
-    #Notes for report, made the space smaller by centering the origin, used direction image
-    #didn't add horizontal or vertical lines, didn't check for intersections between similar angle lines
-
-    #TOO FIX - TAKES REALLY LONG ON INPUT9!
-
-image_name = input("Please enter image name: ")
+    
+image_name = "input"+input("Please enter image number: ")+".jpg"
 image_type = input("Please enter image type: ")
-hough(image_name, image_type, 15, 35, 1, 2, 200, 10, 20) 
+hough(image_name, image_type, 15, 35, 2, 2, 200, 10, 20) 
 '''
 for n in range(16):
     image_name = "input"+str(n)+".jpg"
-    #hough(image_name, "circles", 15, 35, 1, 2, 200, 10, 20)
-    hough(image_name, "lines", 15, 35, 1, 2, 200, 10, 20)
+    hough(image_name, "circles", 15, 35, 2, 2, 200, 10, 20)
+    hough(image_name, "lines", 15, 35, 2, 2, 200, 10, 20)
 '''

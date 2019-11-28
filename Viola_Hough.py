@@ -5,9 +5,10 @@ import matplotlib as plt
 from pprint import pprint
 
 def threshold(a, t):
-    a[a > t] = 255
-    a[a <= t] = 0
-    return a
+    b = np.copy(a)
+    b[b > t] = 255
+    b[b <= t] = 0
+    return b
 
 def convolve(image,	kernel):
     (iH, iW) = image.shape[:2]
@@ -74,7 +75,11 @@ def hough(image_name, image_type, rmin, rmax, rinc, ainc, t1, t2, t3):
     circle_image = np.sum(circle_space, axis=0)
     circle_image = threshold(circle_image, 1)
 
-    line_space = threshold(line_space, t3)
+    line_space_prime = threshold(line_space, t3)
+    while (np.size(np.nonzero(line_space_prime)) > 250):
+        t3 += 1
+        line_space_prime = threshold(line_space, t3)
+    line_space = line_space_prime
     dn, an = np.nonzero(line_space)
     for a1 in range(len(an)-1):
         for a2 in range(a1+1, len(an)):
@@ -88,6 +93,7 @@ def hough(image_name, image_type, rmin, rmax, rinc, ainc, t1, t2, t3):
                             x, y = int(np.floor(x+width//2)), int(np.floor(y+height//2))
                             if (y > 0 and y < height and x > 0 and x < width):
                                 line_image[y, x] = 255
+
     det_circles = []
     det_lines = []
     for y in range(height):
@@ -155,7 +161,25 @@ def get_objects(image_number):
     img13_darts = np.array([[275, 122, 127, 127]])
     img14_darts = np.array([[123, 103, 121, 121], [989, 98, 120, 120]])
     img15_darts = np.array([[155, 57, 128, 137]])
-
+    ''' 
+    #Smaller ones!
+    img0_darts = np.array([[471, 49, 93, 109]])
+    img1_darts = np.array([[234, 168, 119, 119]])
+    img2_darts = np.array([[120, 115, 53, 53]])
+    img3_darts = np.array([[336, 162, 41, 43]])
+    img4_darts = np.array([[225, 135, 127, 127]])
+    img5_darts = np.array([[454, 162, 64, 66]])
+    img6_darts = np.array([[224, 130, 37, 37]])
+    img7_darts = np.array([[283, 199, 88, 88]])
+    img8_darts = np.array([[79, 269, 36, 54], [866, 242, 68, 72]])
+    img9_darts = np.array([[248, 92, 143, 143]])
+    img10_darts = np.array([[111, 125, 57, 67], [596, 145, 33, 51], [924, 162, 21, 41]])
+    img11_darts = np.array([[187, 121, 35, 44]])
+    img12_darts = np.array([[169, 104, 35, 84]])
+    img13_darts = np.array([[299, 146, 80, 80]])
+    img14_darts = np.array([[145, 126, 76, 76], [1012, 120, 75, 75]])
+    img15_darts = np.array([[182, 83, 79, 84]])
+    '''
     if (image_number == 0): return img0_darts
     if (image_number == 1): return img1_darts
     if (image_number == 2): return img2_darts
@@ -189,8 +213,8 @@ def viola_jones(image_name, nmin, t4):
     draw(image, tru, (0, 255, 0), 2)
     return det, tru
 
-def viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, t1, t2, t3, t4, t5): 
-    #t1, t2, t3 are hough thresholds, t4 is viola_jones threshold, t5 is viola_hough threshold
+def viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, t1, t2, t3, t4, t5, t6): 
+    #t1, t2, t3 are hough thresholds, t4 is viola_jones threshold, t5, t6 are viola_hough thresholds
     image = cv.imread(image_name)
     image_number = int(image_name[5:-4])
     height, width = image.shape[:2]
@@ -199,22 +223,21 @@ def viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, t1, t2, t3, t4, t5):
     
     det_combo = []
     for (x1, y1, x2, y2) in det_objects:
-        votes = 0
+        circle_votes = 0
+        line_votes = 0
         for (y, x) in det_circles:
             if (y >= y1 and y <= y2 and x >= x1 and x <= x2):
-                votes += 1
+                circle_votes += 1
         for (y, x) in det_lines:
             if (y >= y1 and y <= y2 and x >= x1 and x <= x2):
-                votes += 1
-        if (votes > t5):
+                line_votes += 1
+        if (circle_votes > t5 or line_votes > t6):
             det_combo.append([x1, y1, x2, y2])
     det_combo = np.asarray(det_combo)
     
     draw(image, det_combo, (0, 255,  0), 2)
     draw(image, tru_objects, (0, 0, 255), 2)
     cv.imwrite("viola_hough_output"+str(image_number)+".jpg", image)
-    cv.imshow("Combo", image)
-    cv.waitKey(0)
 
-image_name = input("Please enter image name: ")
-viola_hough(image_name, 15, 35, 1, 2, 3, 200, 10, 20, 0.5, 40)
+image_name = "input"+input("Please enter image number: ")+".jpg"
+viola_hough(image_name, 15, 35, 2, 2, 3, 200, 10, 20, 0.5, 40, 20) 
