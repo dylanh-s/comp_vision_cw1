@@ -137,7 +137,6 @@ def evaluate(tru, det, threshold):
     print("TPR = " + str(TPR))
     print("PPV = " + str(PPV))
     print("F1  = " + str(F1))
-    return TPR, F1
 
 def get_objects(image_number):
     img0_darts = np.array([[442, 16, 153, 175]])
@@ -228,22 +227,27 @@ def viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, t1, t2, t3, t4, t5, t6
         if (circle_votes > t4 or line_votes > t5):
             det_combo.append([x1, y1, x2, y2])
     det_combo = np.asarray(det_combo)
-    tp, f1 = evaluate(tru_objects, det_combo, t6)
+    evaluate(tru_objects, det_combo, t6)
     
     draw(image, det_combo, (0, 255,  0), 2)
     draw(image, tru_objects, (0, 0, 255), 2)
-    #cv.imwrite("viola_hough_output"+str(image_number)+".jpg", image)
-    return tp, f1
+    cv.imwrite("viola_hough_inefficient_output"+str(image_number)+".jpg", image)
 
+rmin = 15
+rmax = 35
+rinc = 2
+ainc = 2
+nmin = 8
+mag_thresh = 200
+circle_thresh = 8
+line_thresh = 40
+circle_votes = 5
+line_votes = 5
+iou_thresh = 0.3
 image_name = "input"+input("Please enter image number: ")+".jpg"
-tp, f1 = viola_hough(image_name, 15, 35, 2, 2, 3, 200, 10, 20, 40, 20, 0.3) 
-
-T = []
-F = []
-
+viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, mag_thresh, circle_thresh, line_thresh, circle_votes, line_votes, iou_thresh) 
+'''
 for n in range(16):
     image_name = "input"+str(n)+".jpg"
-    tp, f1 = viola_hough(image_name, 15, 35, 2, 2, 3, 200, 10, 20, 40, 20, 0.3)     
-    T.append(tp)
-    F.append(f1)
-print(np.mean(T), np.mean(F))
+    viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, mag_thresh, circle_thresh, line_thresh, circle_votes, line_votes, iou_thresh)
+'''

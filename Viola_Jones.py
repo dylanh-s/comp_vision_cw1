@@ -39,10 +39,9 @@ def evaluate(tru, det, threshold):
     except: F1 = 0.0
 
     print("TPR = " + str(TPR))
-    #print("PPV = " + str(PPV))
+    print("PPV = " + str(PPV))
     print("F1  = " + str(F1))
 
-    return TPR, F1
 
 def get_objects(image_type, image_number):
     img0_darts = np.array([[442, 16, 153, 175]])
@@ -120,35 +119,24 @@ def viola_jones(image_name, image_type, nmin, threshold):
     det = np.array([[x, y, w+x, h+y] for (x, y, w, h) in det])
     tru = get_objects(image_type, image_number)
     tru = np.array([[x, y, w+x, h+y] for (x, y, w, h) in tru])
-    print("")
-    print(str(image_number))
-    TPR, F1 = evaluate(tru, det, threshold)
+    evaluate(tru, det, threshold)
 
     draw(image, det, (0, 255, 0), 2)
     draw(image, tru, (0, 0, 255), 2)
     cv.imwrite("viola_jones_"+image_type+"_output"+str(image_number)+".jpg", image)
-    return TPR, F1
-'''
+ 
+nmin = 8
+iou_thresh = 0.3
 image_name = "input"+input("Please enter image number: ")+".jpg"
 image_type = input("Please enter image type: ")
-viola_jones(image_name, image_type, 8, 0.3)
+viola_jones(image_name, image_type, nmin, iou_thresh)
 '''
-#Remove after report
-T = []
-F = []
-
 for n in range(16):
     image_name = "input"+str(n)+".jpg"
-    tp, f1 = viola_jones(image_name, "darts", 8, 0.3)
-    T.append(tp)
-    F.append(f1)
-print(np.mean(T), np.mean(F))
-'''
+    viola_jones(image_name, "darts", nmin, iou_thresh)
+
 i = np.array([4, 5, 13, 14, 15])
 for n in i:
     image_name = "input"+str(n)+".jpg"
-    tp, f1 = viola_jones(image_name, "faces", 8, 0.3)
-    T.append(tp)
-    F.append(f1)
-print(np.mean(T), np.mean(F))
+    viola_jones(image_name, "faces", nmin, iou_thresh)
 '''

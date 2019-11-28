@@ -73,7 +73,7 @@ def hough(image_name, image_type, rmin, rmax, rinc, ainc, t1, t2, t3):
     circle_image = threshold(circle_image, 1)
 
     line_space_prime = threshold(line_space, t3)
-    while (np.size(np.nonzero(line_space_prime)) > 250):
+    while (np.size(np.nonzero(line_space_prime)) > 150):
         t3 += 1
         line_space_prime = threshold(line_space, t3)
     line_space = line_space_prime
@@ -102,13 +102,13 @@ rinc = 2
 ainc = 2
 mag_thresh = 200
 circle_thresh = 8
-line_thresh = 20
+line_thresh = 5
 image_name = "input"+input("Please enter image number: ")+".jpg"
 image_type = input("Please enter image type: ")
 hough(image_name, image_type, rmin, rmax, rinc, ainc, mag_thresh, circle_thresh, line_thresh) 
 '''
 for n in range(16):
     image_name = "input"+str(n)+".jpg"
-    hough(image_name, "circles", 15, 35, 2, 2, 200, 8, 20)
-    hough(image_name, "lines", 15, 35, 2, 2, 200, 8, 20)
+    hough(image_name, "circles", rmin, rmax, rinc, ainc, mag_thresh, circle_thresh, line_thresh)
+    hough(image_name, "lines", rmin, rmax, rinc, ainc, mag_thresh, circle_thresh, line_thresh)
 '''

@@ -75,7 +75,7 @@ def hough(image_name, rmin, rmax, rinc, ainc, t1, t2, t3):
     circle_image = threshold(circle_image, 1)
 
     line_space_prime = threshold(line_space, t3)
-    while (np.size(np.nonzero(line_space_prime)) > 250):
+    while (np.size(np.nonzero(line_space_prime)) > 150):
         t3 += 1
         line_space_prime = threshold(line_space, t3)
     line_space = line_space_prime
@@ -245,9 +245,14 @@ ainc = 2
 nmin = 8
 mag_thresh = 200
 circle_thresh = 8
-line_thresh = 20
+line_thresh = 5
 circle_votes = 5
-line_votes = 5
+line_votes = 20
 iou_thresh = 0.3
 image_name = "input"+input("Please enter image number: ")+".jpg"
 viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, mag_thresh, circle_thresh, line_thresh, circle_votes, line_votes, iou_thresh) 
+'''
+for n in range(16):
+    image_name = "input"+str(n)+".jpg"
+    viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, mag_thresh, circle_thresh, line_thresh, circle_votes, line_votes, iou_thresh)
+'''
