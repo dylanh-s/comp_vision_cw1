@@ -137,6 +137,7 @@ def evaluate(tru, det, threshold):
     print("TPR = " + str(TPR))
     print("PPV = " + str(PPV))
     print("F1  = " + str(F1))
+    return TPR, F1
 
 def get_objects(image_number):
     img0_darts = np.array([[442, 16, 153, 175]])
@@ -191,7 +192,7 @@ def get_objects(image_number):
     if (image_number == 14): return img14_darts
     if (image_number == 15): return img15_darts
 
-def viola_jones(image_name, nmin, t4):
+def viola_jones(image_name, nmin):
     image = cv.imread(image_name)
     image_grey = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
     image_grey = cv.equalizeHist(image_grey)
@@ -201,19 +202,18 @@ def viola_jones(image_name, nmin, t4):
     det = np.array([[x, y, w+x, h+y] for (x, y, w, h) in det])
     tru = get_objects(image_number)
     tru = np.array([[x, y, w+x, h+y] for (x, y, w, h) in tru])
-    evaluate(tru, det, t4)
 
     draw(image, det, (0, 0, 255), 2)
     draw(image, tru, (0, 255, 0), 2)
     return det, tru
 
 def viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, t1, t2, t3, t4, t5, t6): 
-    #t1, t2, t3 are hough thresholds, t4 is viola_jones threshold, t5, t6 are viola_hough thresholds
+    #t1, t2, t3 are hough thresholds, t4, t5, t6 are viola_hough thresholds
     image = cv.imread(image_name)
     image_number = int(image_name[5:-4])
     height, width = image.shape[:2]
     det_circles, det_lines = hough(image_name, rmin, rmax, rinc, ainc, t1, t2, t3)
-    det_objects, tru_objects = viola_jones(image_name, nmin, t4)
+    det_objects, tru_objects = viola_jones(image_name, nmin)
     
     det_combo = []
     for (x1, y1, x2, y2) in det_objects:
@@ -225,13 +225,25 @@ def viola_hough(image_name, rmin, rmax, rinc, ainc, nmin, t1, t2, t3, t4, t5, t6
         for (y, x) in det_lines:
             if (y >= y1 and y <= y2 and x >= x1 and x <= x2):
                 line_votes += 1
-        if (circle_votes > t5 or line_votes > t6):
+        if (circle_votes > t4 or line_votes > t5):
             det_combo.append([x1, y1, x2, y2])
     det_combo = np.asarray(det_combo)
+    tp, f1 = evaluate(tru_objects, det_combo, t6)
     
     draw(image, det_combo, (0, 255,  0), 2)
     draw(image, tru_objects, (0, 0, 255), 2)
-    cv.imwrite("viola_hough_output"+str(image_number)+".jpg", image)
+    #cv.imwrite("viola_hough_output"+str(image_number)+".jpg", image)
+    return tp, f1
 
 image_name = "input"+input("Please enter image number: ")+".jpg"
-viola_hough(image_name, 15, 35, 2, 2, 3, 200, 10, 20, 0.5, 40, 20) 
+tp, f1 = viola_hough(image_name, 15, 35, 2, 2, 3, 200, 10, 20, 40, 20, 0.3) 
+
+T = []
+F = []
+
+for n in range(16):
+    image_name = "input"+str(n)+".jpg"
+    tp, f1 = viola_hough(image_name, 15, 35, 2, 2, 3, 200, 10, 20, 40, 20, 0.3)     
+    T.append(tp)
+    F.append(f1)
+print(np.mean(T), np.mean(F))

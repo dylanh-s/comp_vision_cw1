@@ -95,13 +95,20 @@ def hough(image_name, image_type, rmin, rmax, rinc, ainc, t1, t2, t3):
         cv.imwrite("hough_"+str(image_type)+"_output"+str(image_number)+".jpg", circle_image)
     elif (image_type == "lines"):
         cv.imwrite("hough_"+str(image_type)+"_output"+str(image_number)+".jpg", line_image)
-    
+
+rmin = 15
+rmax = 35
+rinc = 2
+ainc = 2
+mag_thresh = 200
+circle_thresh = 8
+line_thresh = 20
 image_name = "input"+input("Please enter image number: ")+".jpg"
 image_type = input("Please enter image type: ")
-hough(image_name, image_type, 15, 35, 2, 2, 200, 10, 20) 
+hough(image_name, image_type, rmin, rmax, rinc, ainc, mag_thresh, circle_thresh, line_thresh) 
 '''
 for n in range(16):
     image_name = "input"+str(n)+".jpg"
-    hough(image_name, "circles", 15, 35, 2, 2, 200, 10, 20)
-    hough(image_name, "lines", 15, 35, 2, 2, 200, 10, 20)
+    hough(image_name, "circles", 15, 35, 2, 2, 200, 8, 20)
+    hough(image_name, "lines", 15, 35, 2, 2, 200, 8, 20)
 '''

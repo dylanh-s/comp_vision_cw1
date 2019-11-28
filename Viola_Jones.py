@@ -131,14 +131,15 @@ def viola_jones(image_name, image_type, nmin, threshold):
 '''
 image_name = "input"+input("Please enter image number: ")+".jpg"
 image_type = input("Please enter image type: ")
-viola_jones(image_name, image_type, 3, 0.5)
+viola_jones(image_name, image_type, 8, 0.3)
 '''
 #Remove after report
 T = []
 F = []
+
 for n in range(16):
     image_name = "input"+str(n)+".jpg"
-    tp, f1 = viola_jones(image_name, "darts", 8, 0.4)
+    tp, f1 = viola_jones(image_name, "darts", 8, 0.3)
     T.append(tp)
     F.append(f1)
 print(np.mean(T), np.mean(F))
@@ -146,5 +147,8 @@ print(np.mean(T), np.mean(F))
 i = np.array([4, 5, 13, 14, 15])
 for n in i:
     image_name = "input"+str(n)+".jpg"
-    viola_jones(image_name, "faces", 3, 0.5)
+    tp, f1 = viola_jones(image_name, "faces", 8, 0.3)
+    T.append(tp)
+    F.append(f1)
+print(np.mean(T), np.mean(F))
 '''
