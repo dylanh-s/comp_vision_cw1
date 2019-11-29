@@ -26,7 +26,10 @@ def convolve(image,	kernel):
 def sobel(image): 
     y_deriv_image = convolve(image, np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]]))
     x_deriv_image = convolve(image, np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]))
-    magnitude_image, direction_image = cv.cartToPolar(x_deriv_image, y_deriv_image)
+    magnitude_image = np.sqrt(np.square(y_deriv_image)+np.square(x_deriv_image))
+    direction_image = np.arctan2(y_deriv_image, x_deriv_image)
+    direction_image[direction_image > np.pi/2] -= np.pi
+    direction_image[direction_image < -np.pi/2] += np.pi
     return magnitude_image, direction_image
 
 def hough(image_name, image_type, rmin, rmax, rinc, ainc, t1, t2, t3):
