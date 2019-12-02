@@ -60,25 +60,7 @@ def get_objects(image_type, image_number):
     img13_darts = np.array([[275, 122, 127, 127]])
     img14_darts = np.array([[123, 103, 121, 121], [989, 98, 120, 120]])
     img15_darts = np.array([[155, 57, 128, 137]])
-    ''' 
-    #Smaller ones!
-    img0_darts = np.array([[471, 49, 93, 109]])
-    img1_darts = np.array([[234, 168, 119, 119]])
-    img2_darts = np.array([[120, 115, 53, 53]])
-    img3_darts = np.array([[336, 162, 41, 43]])
-    img4_darts = np.array([[225, 135, 127, 127]])
-    img5_darts = np.array([[454, 162, 64, 66]])
-    img6_darts = np.array([[224, 130, 37, 37]])
-    img7_darts = np.array([[283, 199, 88, 88]])
-    img8_darts = np.array([[79, 269, 36, 54], [866, 242, 68, 72]])
-    img9_darts = np.array([[248, 92, 143, 143]])
-    img10_darts = np.array([[111, 125, 57, 67], [596, 145, 33, 51], [924, 162, 21, 41]])
-    img11_darts = np.array([[187, 121, 35, 44]])
-    img12_darts = np.array([[169, 104, 35, 84]])
-    img13_darts = np.array([[299, 146, 80, 80]])
-    img14_darts = np.array([[145, 126, 76, 76], [1012, 120, 75, 75]])
-    img15_darts = np.array([[182, 83, 79, 84]])
-    '''
+
     img4_faces = np.array([[331, 103, 157, 165]])
     img5_faces = np.array([[59, 139, 65, 64], [51, 250, 65, 69], [192, 212, 57, 72], [242, 167, 66, 66], [289, 238, 56, 74], [375, 192, 68, 58], [426, 232, 58, 71], [514, 176, 65, 66], [555, 240, 69, 76], [646, 186, 63, 64], [681, 244, 52, 68]])
     img13_faces = np.array([[420, 131, 118, 128]])
