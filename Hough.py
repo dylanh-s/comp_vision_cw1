@@ -103,6 +103,7 @@ ainc = 2
 mag_thresh = 200
 circle_thresh = 8
 line_thresh = 5
+'''
 image_name = "input"+input("Please enter image number: ")+".jpg"
 image_type = input("Please enter image type: ")
 hough(image_name, image_type, rmin, rmax, rinc, ainc, mag_thresh, circle_thresh, line_thresh) 
@@ -111,4 +112,3 @@ for n in range(16):
     image_name = "input"+str(n)+".jpg"
     hough(image_name, "circles", rmin, rmax, rinc, ainc, mag_thresh, circle_thresh, line_thresh)
     hough(image_name, "lines", rmin, rmax, rinc, ainc, mag_thresh, circle_thresh, line_thresh)
-'''
